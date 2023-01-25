@@ -19,7 +19,7 @@ pygame.mixer.init()
 def song_dl(title):
 
     title=str(title.replace("“", "").replace("”", "")).strip()
-    print(title)
+    #print(title)
     song=title+".mp3"
     song_out=title+".wav"
     cwd = os.getcwd()
@@ -32,12 +32,12 @@ def song_dl(title):
         url = Search(title, limit = 1)
         url=url.result()["result"][0]["link"]
         
-        yt = pytube.YouTube(url).streams.filter(only_audio=True).all()[0]
+        yt = pytube.YouTube(url).streams.filter(only_audio=True)[0]
         try:
             a=yt.download(filename=cwd_song)
         except:
-            time.sleep(1)
-            a=yt.download(filename=cwd_song)
+            song_dl(title)
+
         with open(cwd_song, "rb") as f:
             audio_data = f.read()
         subprocess.call(['ffmpeg', '-i', cwd_song, cwd_song_new])
@@ -76,6 +76,8 @@ new_file=[]
 song_list=[]
 start = time.perf_counter()#####
 
+
+
 #izbira pesmi
 with open('src/pop.csv', 'r', encoding="utf-8") as file:
   reader = csv.reader(file)
@@ -84,8 +86,11 @@ with open('src/pop.csv', 'r', encoding="utf-8") as file:
     if row!=[]:
         song_list.append(row)
 
+
 title=random.choice(song_list)
-print(title)
+
+title
+info=title
 title=title[0].split(",")[0]
 
 
@@ -100,9 +105,12 @@ end = time.perf_counter()######
 elapsed = end - start
 print('Elapsed time:', elapsed)
 
-time.sleep(20)
+for i in range(30, 0, -1):
+    print(i)
+    time.sleep(1)
 
-print(sound_get)
+
+print(info)
 
 
 

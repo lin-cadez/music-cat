@@ -1,20 +1,53 @@
-import csv
 import os
+import csv
+import pytube
+from youtubesearchpython import Search
 import re
 import spotipy
+import json
 from dotenv import load_dotenv
 from spotipy.oauth2 import SpotifyClientCredentials
 
-# load credentials from .env file
-load_dotenv()
 
-CLIENT_ID = 'aaaf9c6454bf40ab96f2a3314eb60856'
-CLIENT_SECRET = '22c83fc9bf1748078a3b07bce05ad4cc'
-OUTPUT_FILE_NAME = "anthems.csv"
-OUTPUT_FILE_NAME="src/"+OUTPUT_FILE_NAME
+def song_dl(title):
 
-# change for your target playlist
-PLAYLIST_LINK = "https://open.spotify.com/playlist/4lhWxULgawAPOEgAkClW0b?si=2c6b8123bffc49cf"
+    #print(title)
+    song=title+".mp3"
+    song_out=title+".wav"
+    cwd=os.getcwd()
+    cwd_song=cwd+"\\"+song
+    cwd_song_new=cwd+"\\"+song_out
+    if os.path.exists(cwd_song_new):
+        return cwd_song_new
+    else:
+        try:
+            url = Search(title, limit = 1)
+            url=url.result()["result"][0]["link"]
+            
+            yt = pytube.YouTube(url).streams.filter(only_audio=True)[0]
+          
+            a=yt.download(filename=cwd_song)
+        except:
+            print("track: ", title, "wasnt downloaded because of reasons")
+
+        return cwd_song_new
+
+
+with open('creds.json') as f:
+    creds = json.load(f)
+
+
+CLIENT_ID = creds["CLIENT_ID"]
+CLIENT_SECRET = creds["CLIENT_SECRET"]
+
+print(CLIENT_ID)
+print(CLIENT_SECRET)
+
+data = []
+
+print("dobrodošel v spotify prenosniku  :-)")
+PLAYLIST_LINK = input("ime playlist: ")
+#PLAYLIST_LINK="https://open.spotify.com/playlist/5ITggBAGBS8x745G8aVzgH?si=c0d636672236467d"
 
 # authenticate
 client_credentials_manager = SpotifyClientCredentials(
@@ -25,60 +58,32 @@ client_credentials_manager = SpotifyClientCredentials(
 session = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
 # get uri from https link
-if match := re.match(r"https://open.spotify.com/playlist/(.*)\?", PLAYLIST_LINK):
-    playlist_uri = match.groups()[0]
+if PLAYLIST_LINK.startswith("https://open.spotify.com/playlist/"):
+    playlist_uri = PLAYLIST_LINK.split("playlist/")[1]
+    playlist_uri = playlist_uri.split("?")[0]
 else:
     raise ValueError("Expected format: https://open.spotify.com/playlist/...")
 
 # get list of tracks in a given playlist (note: max playlist length 100)
 tracks = session.playlist_tracks(playlist_uri)["items"]
 
-with open(OUTPUT_FILE_NAME, "w", encoding="utf-8") as file:
-	pass
-file.close()
-
-# create csv file
-with open(OUTPUT_FILE_NAME, "a", encoding="utf-8") as file:
-    writer = csv.writer(file)
-    
-    # write header column names
-    writer.writerow(["track", "artist"])
-
-    # extract name and artist
-    for track in tracks:
-        name = track["track"]["name"]
-        artists = ", ".join(
-            [artist["name"] for artist in track["track"]["artists"]]
-        )
-
-        # write to csv
-        writer.writerow([name, artists])
 
 
-data = []
+for index, track in enumerate(tracks):
+  name = track["track"]["name"] +" "+ track["track"]["artists"][0]["name"]
+  print(name)
+  song_dl(name)
 
-with open(OUTPUT_FILE_NAME, 'r', encoding="utf-8") as file:
-  csvreader = csv.reader(file, delimiter=',')
+  print("-------------------")
+  print("sam še", len(tracks)-(index+1), "trackov")
+  
+  
 
-  for row in csvreader:
-    if row!=[]:
-      title=row[0]
-      try:
-        author=row[1]
-      except:
-        row=str(row).replace("[", "").replace("]", "").strip().replace('"', "").lstrip("'")
-        title=row.split(",")[0]
-        author=row.split(",")[1]
-      data.append(f"{title},{author}")
+  
+print("-------------------")
+print("naloženo")     
 
 
-print(data)
 
 
-with open(OUTPUT_FILE_NAME, 'w', encoding="utf-8") as file:
-  # Create a CSV writer
-  csvwriter = csv.writer(file)
 
-  # Write each element in data as a new line in the file
-  for row in data:
-    csvwriter.writerow([row])
