@@ -90,45 +90,21 @@ with open('src/pop.csv', 'r', encoding="utf-8") as file:
     if row!=[]:
         song_list.append(row)
 
-print("izbiram pesem")
-title=random.choice(song_list)
-print("pesem izbrana")
-info=title
-title=title[0].split(",")[0]
-
-print("prenašam pesem")
-sound_get = song_dl(title)
-print("pesem prenesena")
-#izreže do najglasnejšega dela
-pygame.mixer.music.load(cut_song(sound_get))
-pygame.mixer.music.play()
-
-
-end = time.perf_counter()######
-elapsed = end - start
+print(song_list)
 
 
 
+for i in song_list():
+
+    try:
+
+        title=i[0]
+        print("prenašam pesem")
+        sound_get = song_dl(title)
+        print("pesem prenesena")
+
+    except:
+        i+=2
+        print("pesem ne obstaja")
 
 
-guess=input("Ugani pesem: ")
-title, artist, release_date =songdetective.get_song_data(title)
-videosSearch = VideosSearch(guess, limit=1)
-guess = videosSearch.result()["result"][0]["title"]
-
-videosSearch = VideosSearch(title, limit=1)
-yt_release_date = videosSearch.result()["result"][0]["publishedTime"]
-title = videosSearch.result()["result"][0]["title"]
-
-pygame.mixer.music.stop()
-
-if yt_release_date>release_date:
-    release_date=yt_release_date
-
-if guess.lower()==title.lower():
-    print("Pravilno!")
-else:
-    print("Napačno!")
-print(title, artist, release_date)
-
-print('Elapsed time:', elapsed)
